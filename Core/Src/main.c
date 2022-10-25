@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdlib.h>
+#include <stdio.h>
 #include "usbd_cdc_if.h"
 #include "dwt_delay.h"
 #include "lps22hb.h"
@@ -95,21 +95,28 @@ int main(void)
   DWT_Init();
 
   HAL_Delay(100);
-
-  float q0, q1, q2, q3, r, p, y, x, z;
+  float p, t;
   char str[80];
   uint8_t slen = 0;
-  int rc = 0;
-  rc = lps22hb_init();
-  slen = snprintf(str, sizeof(str), "result = %d\n\r", rc);
+  struct lps22hb_cfg lps22hb = {
+    .is_bdu = true,
+    .odr = LPS22HB_75HZ,
+    .lpf = LPS22HB_BW_ODR_DIV_9
+  };
+  int rc;
+  rc = lps22hb_init(lps22hb);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    slen = snprintf(str, sizeof(str), "result = %d\n\r", rc);
     CDC_Transmit_FS((uint8_t *)str, slen);
-    HAL_Delay(1000);
+    lps22hb_read_data(&p, &t);
+    slen = snprintf(str, sizeof(str), "p = %f, t = %f\n\r", p, t);
+    CDC_Transmit_FS((uint8_t *)str, slen);
+    HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
