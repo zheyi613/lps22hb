@@ -26,7 +26,6 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "usbd_cdc_if.h"
-#include "dwt_delay.h"
 #include "lps22hb.h"
 #include "math.h"
 /* USER CODE END Includes */
@@ -96,8 +95,6 @@ int main(void)
   MX_I2C1_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-  DWT_Init();
-
   HAL_Delay(100);
   float p, t, h;
   char str[80];
