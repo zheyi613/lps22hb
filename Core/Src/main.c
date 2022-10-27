@@ -28,6 +28,7 @@
 #include "usbd_cdc_if.h"
 #include "dwt_delay.h"
 #include "lps22hb.h"
+#include "math.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,7 +54,10 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+float altitude(float press, float temp)
+{
+  return (powf(1013.25 / press, 1 / 5.257) - 1.0) * (temp + 273.15) / 0.0065;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -95,16 +99,17 @@ int main(void)
   DWT_Init();
 
   HAL_Delay(100);
-  float p, t;
+  float p, t, h;
   char str[80];
   uint8_t slen = 0;
   struct lps22hb_cfg lps22hb = {
-    .is_bdu = false,
+    .mode = LPS22HB_STREAM_MODE,
     .odr = LPS22HB_75HZ,
-    .lpf = LPS22HB_BW_ODR_DIV_9
+    .lpf = LPS22HB_BW_ODR_DIV_9,
+    .ref_press = 0.0
   };
   int rc;
-  rc = lps22hb_init2(lps22hb);
+  rc = lps22hb_init(lps22hb);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -113,8 +118,9 @@ int main(void)
   {
     slen = snprintf(str, sizeof(str), "result = %d\n\r", rc);
     CDC_Transmit_FS((uint8_t *)str, slen);
-    lps22hb_read_fifo(&p, &t);
-    slen = snprintf(str, sizeof(str), "p = %f, t = %f\n\r", p, t);
+    lps22hb_read_data(&p, &t);
+    h = altitude(p, t);
+    slen = snprintf(str, sizeof(str), "p = %f, t = %f, h = %f\n\r", p, t, h);
     CDC_Transmit_FS((uint8_t *)str, slen);
     HAL_Delay(100);
     /* USER CODE END WHILE */
