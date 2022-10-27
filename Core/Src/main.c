@@ -99,12 +99,12 @@ int main(void)
   char str[80];
   uint8_t slen = 0;
   struct lps22hb_cfg lps22hb = {
-    .is_bdu = true,
+    .is_bdu = false,
     .odr = LPS22HB_75HZ,
     .lpf = LPS22HB_BW_ODR_DIV_9
   };
   int rc;
-  rc = lps22hb_init(lps22hb);
+  rc = lps22hb_init2(lps22hb);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -113,7 +113,7 @@ int main(void)
   {
     slen = snprintf(str, sizeof(str), "result = %d\n\r", rc);
     CDC_Transmit_FS((uint8_t *)str, slen);
-    lps22hb_read_data(&p, &t);
+    lps22hb_read_fifo(&p, &t);
     slen = snprintf(str, sizeof(str), "p = %f, t = %f\n\r", p, t);
     CDC_Transmit_FS((uint8_t *)str, slen);
     HAL_Delay(100);

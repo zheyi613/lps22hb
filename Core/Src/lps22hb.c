@@ -167,6 +167,55 @@ int lps22hb_init(struct lps22hb_cfg lps22hb)
 	return 0;
 }
 
+int lps22hb_init2(struct lps22hb_cfg lps22hb)
+{
+	int rc;
+	char str[80];
+	uint8_t slen;
+	uint8_t regval = 0;
+
+	slen = snprintf(str, sizeof(str), "Initializing LPS22HB...%s", "\n\r");
+	MSG((uint8_t *)str, slen);
+
+	rc = lps22hb_get_whoami(&regval);
+	if (regval != LPS22HB_ID)
+		return rc;
+
+	/* Soft reset */
+	rc = lps22hb_srst();
+	if (rc)
+		return rc;
+
+	/* Set ODR, LPF, BDU */
+	regval = lps22hb.odr << 4 | lps22hb.lpf << 2 | lps22hb.is_bdu << 1;
+	rc = lps_write_reg(LPS22HB_CTRL_REG1, &regval, 1);
+	if (rc)
+		return rc;
+	is_bdu = lps22hb.is_bdu;
+
+	/* Reset LPF */
+	rc = lps_read_reg(LPS22HB_LPFP_RES, &regval, 1);
+	if (rc)
+		return rc;
+
+	regval = 0x02 << 5;
+	rc = lps_write_reg(LPS22HB_FIFO_CTRL, &regval, 1);
+	if (rc)
+		return rc;
+	regval = 0x10 | 0x40;
+	rc = lps_write_reg(LPS22HB_CTRL_REG2, &regval, 1);
+	if (rc)
+		return rc;
+	slen = snprintf(str, sizeof(str), "Initialize successfully !%s",
+			"\n\r");
+	MSG((uint8_t *)str, slen);
+
+	return 0;
+}
+
+
+
+
 static bool lps22hb_is_data_rdy(void)
 {
 	uint8_t status = 0;
@@ -238,4 +287,40 @@ void lps22hb_read_temp(float *temp)
 		return;
 
 	*temp = (float)raw_temp / 100.0;
+}
+
+static const int lps22hb_get_fifo_cnt(void)
+{
+	uint8_t status = 0;
+
+	lps_read_reg(LPS22HB_FIFO_STATUS, &status, 1);
+	return status & 0x3F;
+}
+
+void lps22hb_read_fifo(float *press, float *temp)
+{
+	int rc = 0;
+	const int cnt = lps22hb_get_fifo_cnt();
+	if (cnt == 0)	return;
+	lps22hb_data_t get_data[cnt];
+	uint32_t intpress = 0;
+	float press_total = 0;
+	float temp_total = 0;
+
+	rc = lps_read_reg(LPS22HB_PRESS_OUT_XL, get_data[0].bytes, cnt * 5);
+	if (rc)
+		return;
+	
+	for (int i = 0; i < cnt; i++) {
+		intpress = 0;
+		if (get_data[i].data.press[2] & 0x80) /* minus case */
+		intpress = 0xFF000000UL;
+		intpress |= get_data[i].data.press[2] << 16 | get_data[i].data.press[1] << 8 |
+		    get_data[i].data.press[0];
+		press_total += (float)intpress / 4096;
+		temp_total += (float)get_data[i].data.temp / 100;
+	}
+	
+	*press = press_total / cnt;
+	*temp = temp_total / cnt;
 }
