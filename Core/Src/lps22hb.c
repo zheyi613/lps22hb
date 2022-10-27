@@ -21,9 +21,9 @@ static inline int lps_read_reg(uint8_t reg, uint8_t *buff, uint8_t len)
 	} else {
 		int result = 0;
 		for (uint8_t i = 0; i < len; i++) {
-			result = HAL_I2C_Mem_Read(&LPS22HB_I2C, LPS22HB_ADDR << 1,
-					      reg + i, I2C_MEMADD_SIZE_8BIT,
-					      buff + i, 1, 10);
+			result = HAL_I2C_Mem_Read(
+				&LPS22HB_I2C, LPS22HB_ADDR << 1, reg + i,
+				I2C_MEMADD_SIZE_8BIT, buff + i, 1, 10);
 			if (result)
 				return result;
 		}
@@ -39,9 +39,9 @@ static inline int lps_write_reg(uint8_t reg, uint8_t *buff, uint8_t len)
 	} else {
 		int result = 0;
 		for (uint8_t i = 0; i < len; i++) {
-			result = HAL_I2C_Mem_Write(&LPS22HB_I2C, LPS22HB_ADDR << 1,
-					       reg + i, I2C_MEMADD_SIZE_8BIT,
-					       buff + i, 1, 10);
+			result = HAL_I2C_Mem_Write(
+				&LPS22HB_I2C, LPS22HB_ADDR << 1, reg + i,
+				I2C_MEMADD_SIZE_8BIT, buff + i, 1, 10);
 			if (result)
 				return result;
 		}
@@ -148,7 +148,7 @@ int lps22hb_init(struct lps22hb_cfg lps22hb)
 	result = lps22hb_set_press_ofs(LPS22HB_PRESSURE_OFS);
 	if (result)
 		return result;
-	
+
 	result = lps22hb_set_ref_press(lps22hb.ref_press);
 	if (result)
 		return result;
@@ -250,17 +250,18 @@ void lps22hb_read_stream(float *press, float *temp)
 	result = lps_read_reg(LPS22HB_PRESS_OUT_XL, get_data[0].bytes, cnt * 5);
 	if (result)
 		return;
-	
+
 	for (int i = 0; i < cnt; i++) {
 		intpress = 0;
 		if (get_data[i].data.press[2] & 0x80) /* minus case */
-		intpress = 0xFF000000UL;
-		intpress |= get_data[i].data.press[2] << 16 | get_data[i].data.press[1] << 8 |
-		    get_data[i].data.press[0];
+			intpress = 0xFF000000UL;
+		intpress |= get_data[i].data.press[2] << 16 |
+			    get_data[i].data.press[1] << 8 |
+			    get_data[i].data.press[0];
 		press_total += (float)intpress / 4096;
 		temp_total += (float)get_data[i].data.temp / 100;
 	}
-	
+
 	*press = press_total / cnt;
 	*temp = temp_total / cnt;
 }
@@ -272,6 +273,3 @@ void lps22hb_read_data(float *press, float *temp)
 	else
 		lps22hb_read_stream(press, temp);
 }
-
-
-
