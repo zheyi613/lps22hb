@@ -56,6 +56,7 @@ enum lps22hb_lpf {
  * mode:   fifo_mode refer to enum lps22hb_fifo
  * odr:    output data rate refer to enum lps22hb_odr
  * lpf:    low pass filter refer to enum lps22hb_lpf
+ * ref_press: reference pressure
  */
 struct lps22hb_cfg {
         enum lps22hb_fifo mode;
