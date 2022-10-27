@@ -13,40 +13,16 @@
 static bool is_bypass = false;
 
 /* User serial interface */
-static inline int lps_read_reg(uint8_t reg, uint8_t *buff, uint8_t len)
+static inline int lps22hb_read_reg(uint8_t reg, uint8_t *buff, uint8_t len)
 {
-	if (!is_bypass) {
-		return HAL_I2C_Mem_Read(&LPS22HB_I2C, LPS22HB_ADDR << 1, reg,
-					I2C_MEMADD_SIZE_8BIT, buff, len, 10);
-	} else {
-		int result = 0;
-		for (uint8_t i = 0; i < len; i++) {
-			result = HAL_I2C_Mem_Read(
-				&LPS22HB_I2C, LPS22HB_ADDR << 1, reg + i,
-				I2C_MEMADD_SIZE_8BIT, buff + i, 1, 10);
-			if (result)
-				return result;
-		}
-		return result;
-	}
+	return HAL_I2C_Mem_Read(&LPS22HB_I2C, LPS22HB_ADDR << 1, reg,
+				I2C_MEMADD_SIZE_8BIT, buff, len, 10);
 }
 
-static inline int lps_write_reg(uint8_t reg, uint8_t *buff, uint8_t len)
+static inline int lps22hb_write_reg(uint8_t reg, uint8_t *buff, uint8_t len)
 {
-	if (!is_bypass) {
-		return HAL_I2C_Mem_Write(&LPS22HB_I2C, LPS22HB_ADDR << 1, reg,
-					 I2C_MEMADD_SIZE_8BIT, buff, len, 10);
-	} else {
-		int result = 0;
-		for (uint8_t i = 0; i < len; i++) {
-			result = HAL_I2C_Mem_Write(
-				&LPS22HB_I2C, LPS22HB_ADDR << 1, reg + i,
-				I2C_MEMADD_SIZE_8BIT, buff + i, 1, 10);
-			if (result)
-				return result;
-		}
-		return result;
-	}
+	return HAL_I2C_Mem_Write(&LPS22HB_I2C, LPS22HB_ADDR << 1, reg,
+				 I2C_MEMADD_SIZE_8BIT, buff, len, 10);
 }
 
 enum lps22hb_reg {
@@ -77,14 +53,14 @@ enum lps22hb_reg {
 
 static inline int lps22hb_get_whoami(uint8_t *whoami)
 {
-	return lps_read_reg(LPS22HB_WHO_AM_I, whoami, 1);
+	return lps22hb_read_reg(LPS22HB_WHO_AM_I, whoami, 1);
 }
 
 static inline int lps22hb_srst(void)
 {
 	uint8_t regval = 0x04;
 
-	return lps_write_reg(LPS22HB_CTRL_REG2, &regval, 1);
+	return lps22hb_write_reg(LPS22HB_CTRL_REG2, &regval, 1);
 }
 
 /**
@@ -97,7 +73,7 @@ static inline int lps22hb_set_press_threshold(float ths)
 {
 	int16_t regval = (int16_t)(ths * 16);
 
-	return lps_write_reg(LPS22HB_THS_P_L, (uint8_t *)&regval, 2);
+	return lps22hb_write_reg(LPS22HB_THS_P_L, (uint8_t *)&regval, 2);
 }
 
 /**
@@ -110,7 +86,7 @@ static inline int lps22hb_set_ref_press(float ref)
 {
 	int32_t regval = (int32_t)(ref * 4096);
 
-	return lps_write_reg(LPS22HB_REF_P_XL, (uint8_t *)regval, 3);
+	return lps22hb_write_reg(LPS22HB_REF_P_XL, (uint8_t *)regval, 3);
 }
 
 /**
@@ -123,7 +99,7 @@ static int lps22hb_set_press_ofs(float ofs)
 {
 	int16_t regval = (int16_t)(ofs * 16);
 
-	return lps_write_reg(LPS22HB_RPDS_L, (uint8_t *)&regval, 2);
+	return lps22hb_write_reg(LPS22HB_RPDS_L, (uint8_t *)&regval, 2);
 }
 
 int lps22hb_init(struct lps22hb_cfg lps22hb)
@@ -155,7 +131,7 @@ int lps22hb_init(struct lps22hb_cfg lps22hb)
 
 	/* Set FIFO mode */
 	regval = lps22hb.mode << 5;
-	result = lps_write_reg(LPS22HB_FIFO_CTRL, &regval, 1);
+	result = lps22hb_write_reg(LPS22HB_FIFO_CTRL, &regval, 1);
 	if (result)
 		return result;
 
@@ -163,12 +139,12 @@ int lps22hb_init(struct lps22hb_cfg lps22hb)
 	if (lps22hb.mode == LPS22HB_BYPASS_MODE)
 		is_bypass = true;
 	regval = lps22hb.odr << 4 | lps22hb.lpf << 2 | is_bypass << 1;
-	result = lps_write_reg(LPS22HB_CTRL_REG1, &regval, 1);
+	result = lps22hb_write_reg(LPS22HB_CTRL_REG1, &regval, 1);
 	if (result)
 		return result;
 
 	/* Reset LPF */
-	result = lps_write_reg(LPS22HB_LPFP_RES, &regval, 1);
+	result = lps22hb_write_reg(LPS22HB_LPFP_RES, &regval, 1);
 	if (result)
 		return result;
 
@@ -178,7 +154,7 @@ int lps22hb_init(struct lps22hb_cfg lps22hb)
 	 * stream mode: otherwise
 	 */
 	regval = !is_bypass << 6 | !is_bypass << 4;
-	result = lps_write_reg(LPS22HB_CTRL_REG2, &regval, 1);
+	result = lps22hb_write_reg(LPS22HB_CTRL_REG2, &regval, 1);
 	if (result)
 		return result;
 
@@ -193,7 +169,7 @@ static inline bool lps22hb_is_data_rdy(void)
 {
 	uint8_t status = 0;
 
-	lps_read_reg(LPS22HB_STATUS, &status, 1);
+	lps22hb_read_reg(LPS22HB_STATUS, &status, 1);
 	return ((status & 0x03) == 0x03) ? true : false;
 }
 
@@ -201,7 +177,7 @@ static inline const int lps22hb_get_fifo_cnt(void)
 {
 	uint8_t status = 0;
 
-	lps_read_reg(LPS22HB_FIFO_STATUS, &status, 1);
+	lps22hb_read_reg(LPS22HB_FIFO_STATUS, &status, 1);
 	return status & 0x3F;
 }
 
@@ -223,10 +199,12 @@ void lps22hb_read_bypass(float *press, float *temp)
 
 	if (!lps22hb_is_data_rdy())
 		return;
-
-	result = lps_read_reg(LPS22HB_PRESS_OUT_XL, get_data.bytes, 5);
-	if (result)
-		return;
+	for (uint8_t i = 0; i < 5; i++) {
+		result = lps22hb_read_reg(LPS22HB_PRESS_OUT_XL + i,
+					  get_data.bytes + i, 1);
+		if (result)
+			return;
+	}
 
 	if (get_data.data.press[2] & 0x80) /* minus case */
 		intpress = 0xFF000000UL;
@@ -247,7 +225,8 @@ void lps22hb_read_stream(float *press, float *temp)
 	float press_total = 0;
 	float temp_total = 0;
 
-	result = lps_read_reg(LPS22HB_PRESS_OUT_XL, get_data[0].bytes, cnt * 5);
+	result = lps22hb_read_reg(LPS22HB_PRESS_OUT_XL, get_data[0].bytes,
+				  cnt * 5);
 	if (result)
 		return;
 
