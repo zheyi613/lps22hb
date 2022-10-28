@@ -17,7 +17,7 @@
 #define LPS22HB_ADDR    (0b1011100 | LPS22HB_SA0) 
 #define LPS22HB_ID      0xB1
 
-#define LPS22HB_PRESSURE_OFS    2.74 /* hPa */
+#define LPS22HB_PRESSURE_OFS    4.67 /* hPa */
 
 /* 
  * Bypass Mode:
