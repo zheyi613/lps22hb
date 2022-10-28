@@ -1,5 +1,5 @@
 # lps22hb
-LPS22HB library test on STM32F401
+Test LPS22HB library on STM32F401
 - [LPS22HB datasheet](https://www.st.com/resource/en/datasheet/dm00140895.pdf)
 
 ## User Guide
