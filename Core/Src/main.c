@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "usart.h"
 #include "usb_device.h"
 #include "gpio.h"
 
@@ -94,6 +95,7 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USB_DEVICE_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_Delay(100);
   float p, t, h;
